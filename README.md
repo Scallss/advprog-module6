@@ -76,7 +76,7 @@ Setelah menjalankan server dan mengakses `http://127.0.0.1:7878`, halaman `hello
 
 ![Commit 3 screen capture](/assets/images/commit3.png)
 
-# Commit 4 Reflection
+## Commit 4 Reflection
 
 Pada milestone ini, saya menambahkan simulasi slow request pada web server untuk mengamati dampak penggunaan single-thread dalam menangani request. Beberapa poin pentingnya adalah:
 
@@ -88,3 +88,24 @@ Pada milestone ini, saya menambahkan simulasi slow request pada web server untuk
    - Karena server berjalan pada single-thread, ketika satu request tertunda, seluruh server tidak dapat memproses request lain hingga penundaan selesai.
    - Dengan membuka dua jendela browser, satu request yang mengakses `/sleep` akan mengakibatkan request lainnya (misalnya `GET / HTTP/1.1`) harus menunggu.
    - Simulasi ini memberikan gambaran nyata tentang keterbatasan server yang hanya menggunakan satu thread. Dalam skenario production dengan banyak pengguna, hal ini dapat menyebabkan performa dan pengalaman yang buruk.
+
+# Commit 5 Reflection
+
+Pada milestone ini, saya mengubah server single-threaded menjadi multithreaded dengan menerapkan konsep threadpool. Berikut adalah beberapa poin pentingnya:
+
+1. **Motivasi Penggunaan ThreadPool**  
+   - Server single-threaded hanya dapat menangani satu request pada satu waktu, sehingga request lambat dapat menghambat penanganan request lain.
+   - Dengan menggunakan thread pool, saya dapat membatasi jumlah thread yang aktif sekaligus. Hal ini juga membantu mencegah serangan Denial of Service (DoS).
+
+2. **Perancangan Interface ThreadPool**  
+   - Saya mendesain interface `ThreadPool` yang sederhana dengan fungsi `new` untuk membuat instance dan fungsi `execute` untuk menjalankan closure pada thread pool.
+   - Pendekatan ini mirip dengan penggunaan `thread::spawn`, namun dengan kontrol lebih atas jumlah thread yang aktif.
+
+3. **Implementasi Validasi Thread**  
+   - Pada fungsi `ThreadPool::new`, digunakan `assert!(size > 0)` untuk memastikan jumlah thread yang valid. Jika nilai `size` adalah nol, maka program akan panic.
+
+4. **Penerapan Fungsi execute**  
+   - Fungsi `execute` dideklarasikan dengan trait bound `F: FnOnce() + Send + 'static` agar closure yang diberikan dapat dipindahkan antar thread.
+   - Meskipun implementasinya masih sederhana (closure belum dijalankan), desain ini memberikan fondasi untuk pengembangan lebih lanjut agar thread pool benar-benar mengeksekusi task secara concurrent.
+
+Secara keseluruhan, implementasi ini memberikan pemahaman yang lebih mendalam tentang konsep concurrency di Rust dan bagaimana mengelola sumber daya secara efisien menggunakan thread pool.
